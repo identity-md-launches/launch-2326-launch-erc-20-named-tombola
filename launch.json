@@ -1,0 +1,24 @@
+{
+  "kind": "custom_token",
+  "token": {
+    "contract": "TombolaToken",
+    "name": "Tombola",
+    "symbol": "TOMBOLA",
+    "decimals": 18,
+    "constructorArgs": [],
+    "totalSupply": "1000000000000000000000000000"
+  },
+  "contracts": [],
+  "pool": {
+    "pairedCurrency": "0x0000000000000000000000000000000000000000",
+    "fee": 12500,
+    "tickSpacing": 60,
+    "initialPrice": "79228162514264337593543950336"
+  },
+  "economics": {
+    "poolBps": 7800,
+    "initialMarketCapWei": "10000000000000000000",
+    "remainderTo": "0x331100a344f01c729f15165ba74aa54e3207566d"
+  },
+  "notes": "TombolaToken (src/TombolaToken.sol) is DropTokenReference (src/reference/DropTokenReference.sol) unchanged, with Tombola's addresses fixed in code and no constructor arguments: the constructor mints the whole 1,000,000,000e18 fixed supply to msg.sender (IMD's factory) and records it as FACTORY and block.timestamp as LAUNCH_TIME. Immutables: PoolManager 0x8366a39cc670b4001a1121b8f6a443a643e40951, vault 0x331100a344f01c729f15165ba74aa54e3207566d, and five team wallets (excluded from drops). No owner, mint, pause, blacklist, proxy, initializer, DELEGATECALL or SELFDESTRUCT; the only privileged call is compact(maxSteps), vault-only, which moves no balances. Deploy exactly as written with this repository's foundry.toml (solc 0.8.26, cancun, via_ir, 200 runs, bytecode_hash none): the vault's bind compares runtime code outside the four immutables. No application contracts. Transfer rules: 6% of tokens leaving the PoolManager (buys) goes to the vault; sells pay 6% on top of the amount entering the PoolManager, to the vault; wallet-to-wallet transfers pay no fee; transfers from or to the factory and from or to the vault are exempt. Also kept: hold clock with 72-hour clamp, timestamp-keyed balance and hold-clock checkpoints, listed-wallet array and compact() with its previous-second rule, claim-contract detection by the factory's transfer of exactly 10% of supply in the launch second, 15-minute 5,000,000-token per-transfer buy cap, isExcluded. Pool: the factory's standard Uniswap v4 ETH/TOMBOLA pool, currency0 native ETH, currency1 the token, LP fee 12500 (1.25%), tick spacing 60, hook 0x19bec7c2e1b2aadaf67b259744751a9960d66000; the vault reads this key from the factory's positionOf when it binds. initialPrice is provenance only; the deployer derives the opening price from initialMarketCapWei (10 ETH cap) and totalSupply. 78% seeds the pool, 12% goes to the vault as remainderTo, the swarm's 10% is the factory's. Imported audit, reproduced locally against the unchanged code (test/scratch, not submitted): (1) HIGH, reproduces: a full-balance sell into the PoolManager reverts with InsufficientBalance because 6% is charged on top; after a 1,000,000e18 buy the trader holds 940,000e18, transfer(PoolManager, 940,000e18) reverts, and the largest sell that succeeds is 886,792.45e18, leaving unsellable dust. The launch floor test_theSeedAndASwapEachWaySucceed sells back exactly what was bought and asserts a zero balance, so it fails against this token and the launch is refused ('a seed or a swap that reverts'). NOT fixed: the requester asked to keep the on-top sell tax exactly as written, src/ may not change, and the vault refuses differing bytecode. This must be settled with the requester: take the 6% out of the amount sent (changes vault-checked bytecode), or have the floor's sell leave room for the tax (changes the floor). (2) LOW, reproduces: one 10,000e18 balance passed along 200 fresh wallets grows listedCount by 200 for gas alone; compact removes such entries only one vault call at a time and never during a drop. Impact depends on the vault's iteration, whose source is not in this repository; not fixed, same constraints. (3) INFO: audit coverage, not a defect; the vault, factory, hook and distributor sources are outside this repository, so their use of the token and the pool key could not be checked against code here."
+}
